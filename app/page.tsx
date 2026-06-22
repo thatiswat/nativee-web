@@ -1,453 +1,233 @@
-"use client";
-
-import { useState } from "react";
-
-import Hero from "@/components/Hero";
-import LanguagePicker from "@/components/LanguagePicker";
-import MicButton from "@/components/MicButton";
-import { sendAudio } from "@/lib/api";
-
-const BACKEND_URL =
-  "https://ispeak-backend-production-d877.up.railway.app";
-
-const LANGUAGE_NAMES = {
-  "": "Select Language",
-  auto: "Auto Detect",
-  en: "English",
-  hi: "Hindi",
-  kn: "Kannada",
-  ta: "Tamil",
-  te: "Telugu",
-  ml: "Malayalam"
-};
+import Link from "next/link";
 
 export default function Home() {
-
-  const [status, setStatus] =
-    useState("Ready to translate");
-
-  const [audioUrl, setAudioUrl] =
-    useState<string | null>(null);
-
-  const [isProcessing, setIsProcessing] =
-    useState(false);
-
-  const [history, setHistory] =
-    useState<
-      {
-        original: string;
-        translated: string;
-        time: string;
-      }[]
-    >([]);
-
-  const [sourceLanguage, setSourceLanguage] =
-    useState("");
-
-  const [targetLanguage, setTargetLanguage] =
-    useState("hi");
-
-  function replayAudio() {
-
-    if (!audioUrl)
-      return;
-
-    const audio =
-      new Audio(
-        audioUrl
-      );
-
-    audio.currentTime = 0;
-
-    audio
-      .play()
-      .catch(
-        console.error
-      );
-
-  }
-
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="bg-white text-black">
 
-      <Hero />
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-zinc-100">
+        <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
+          <h1 className="text-3xl font-semibold tracking-tight">
+            1Speak
+          </h1>
 
-      <section className="px-6 pb-20">
+          <Link
+            href="/connect"
+            className="px-6 py-3 rounded-full bg-black text-white hover:opacity-90 transition"
+          >
+            Open Connect
+          </Link>
+        </div>
+      </nav>
 
-        <div
-          className="
-          max-w-5xl
-          mx-auto
-          mt-8
-          bg-slate-900/40
-          backdrop-blur-xl
-          border
-          border-slate-800
-          rounded-[40px]
-          p-8
-          "
+      {/* HERO */}
+      <section className="h-[85vh] flex flex-col items-center justify-center px-8 text-center">
+        <h1 className="text-5xl md:text-[7rem] leading-[0.9] font-bold tracking-tight">
+          Language
+          <br />
+          Shouldn't
+          <br />
+          Matter.
+        </h1>
+
+        <p className="mt-8 text-lg text-zinc-500 max-w-2xl">
+          Real-time voice translation for conversations across India.
+        </p>
+
+        <Link
+          href="/connect"
+          className="mt-12 px-10 py-5 rounded-full bg-black text-white text-lg hover:scale-105 transition"
         >
+          Open Connect
+        </Link>
+      </section>
 
-          <LanguagePicker
-            sourceLanguage={sourceLanguage}
-            targetLanguage={targetLanguage}
-            onSourceChange={setSourceLanguage}
-            onTargetChange={setTargetLanguage}
-          />
+      {/* SEE IT IN ACTION */}
+      <section className="py-32 px-8 border-t border-zinc-100">
+        <div className="max-w-4xl mx-auto text-center">
 
-          <div className="flex justify-center gap-4 mt-4">
+          <h2 className="text-4xl md:text-5xl font-bold">
+            See it in action
+          </h2>
 
-            <button
-              onClick={() => {
+          <div className="mt-16 space-y-10 text-lg">
 
-                if (
-                  sourceLanguage === "" ||
-                  sourceLanguage === "auto"
-                ) return;
+            <div>
+              <p className="font-semibold">You</p>
+              <p className="mt-2">Hello</p>
+            </div>
 
-                const temp =
-                  sourceLanguage;
+            <div className="text-zinc-400">↓</div>
 
-                setSourceLanguage(
-                  targetLanguage
-                );
+            <div>
+              <p className="font-semibold">Hindi</p>
+              <p className="mt-2">नमस्ते</p>
+            </div>
 
-                setTargetLanguage(
-                  temp
-                );
+            <div className="text-zinc-400">↓</div>
 
-              }}
-              className="
-              px-4
-              py-2
-              rounded-xl
-              bg-slate-800
-              hover:bg-slate-700
-              transition
-              "
-            >
-              ⇄ Swap
-            </button>
-
-            <button
-              onClick={() =>
-                setHistory([])
-              }
-              className="
-              px-4
-              py-2
-              rounded-xl
-              bg-slate-800
-              hover:bg-slate-700
-              transition
-              "
-            >
-              Clear History
-            </button>
-
-          </div>
-
-          <p className="text-center text-slate-500 mt-4">
-
-            {
-              LANGUAGE_NAMES[
-                sourceLanguage as keyof typeof LANGUAGE_NAMES
-              ]
-            }
-
-            {" → "}
-
-            {
-              LANGUAGE_NAMES[
-                targetLanguage as keyof typeof LANGUAGE_NAMES
-              ]
-            }
-
-          </p>
-
-          <div className="mt-10">
-
-            <MicButton
-              disabled={isProcessing}
-              onRecordingComplete={async (blob) => {
-
-                if (isProcessing)
-                  return;
-
-                if (!sourceLanguage) {
-
-                  setStatus(
-                    "Select source language first"
-                  );
-
-                  return;
-
-                }
-
-                setIsProcessing(
-                  true
-                );
-
-                try {
-
-                  setStatus(
-                    "Translating..."
-                  );
-
-                  setAudioUrl(
-                    null
-                  );
-
-                  const data =
-                    await sendAudio(
-                      blob,
-                      sourceLanguage,
-                      targetLanguage
-                    );
-
-                  console.log(
-                    "Backend response:",
-                    data
-                  );
-
-                  setHistory((prev) => [
-
-                    {
-                      original:
-                        data.original,
-
-                      translated:
-                        data.translated,
-
-                      time:
-                        new Date()
-                          .toLocaleTimeString(
-                            [],
-                            {
-                              hour: "numeric",
-                              minute: "2-digit"
-                            }
-                          )
-                    },
-
-                    ...prev
-
-                  ].slice(0, 20));
-
-                  const url =
-                    data.audio_url.startsWith("http")
-                    ? data.audio_url
-                    : `${BACKEND_URL}${data.audio_url.startsWith("/") ? "" : "/"}${data.audio_url}`;
-
-                  console.log(
-                    "Audio URL:",
-                    url
-                  );
-
-                  setAudioUrl(
-                    url
-                  );
-
-                  const audio =
-                    new Audio(
-                       url
-                    );
-
-                  audio.volume = 1; 
-
-                  audio
-                    .play()
-                    .then(() => {
-
-                      console.log(
-                        "Audio playing"
-                      );
-
-                    })
-                    .catch((err) => {
-
-                      console.error(
-                        "Audio autoplay failed:",
-                        err
-                      );
-
-                    });
-
-                  setStatus(
-                    "Translation Ready"
-                  );
-
-                } catch (error) {
-
-                  console.error(
-                    "Translation error:",
-                    error
-                  );
-
-                  setStatus(
-                    "Failed"
-                  );
-
-                } finally {
-
-                  setIsProcessing(
-                    false
-                  );
-
-                }
-
-              }}
-            />
-
-          </div>
-
-          <p className="text-center mt-6 text-slate-400">
-
-            {
-              isProcessing
-                ? "Translating..."
-                : status
-            }
-
-          </p>
-
-          <div
-            className="
-            mt-12
-            space-y-4
-            max-h-[500px]
-            overflow-y-auto
-            pr-2
-            "
-          >
-
-            {history.length === 0 ? (
-
-              <div
-                className="
-                text-center
-                text-slate-500
-                py-12
-                "
-              >
-                Start speaking to begin a conversation
-              </div>
-
-            ) : (
-
-              history.map(
-                (item, index) => (
-
-                  <div
-                    key={`${item.time}-${index}`}
-                    className="
-                    bg-slate-950/50
-                    border
-                    border-slate-800
-                    rounded-3xl
-                    p-5
-                    "
-                  >
-
-                    <p
-                      className="
-                      text-xs
-                      uppercase
-                      tracking-widest
-                      text-indigo-400
-                      "
-                    >
-                      YOU SAID
-                    </p>
-
-                    <p className="mt-2">
-                      {item.original}
-                    </p>
-
-                    <p
-                      className="
-                      text-xs
-                      text-slate-500
-                      mt-2
-                      "
-                    >
-                      {item.time}
-                    </p>
-
-                    <div className="h-px bg-slate-800 my-4" />
-
-                    <p
-                      className="
-                      text-xs
-                      uppercase
-                      tracking-widest
-                      text-green-400
-                      "
-                    >
-                      THEY HEAR
-                    </p>
-
-                    <p className="mt-2">
-                      {item.translated}
-                    </p>
-
-                  </div>
-
-                )
-              )
-
-            )}
-
-          </div>
-
-          <div
-            className="
-            mt-6
-            bg-slate-950/60
-            border
-            border-slate-800
-            rounded-[28px]
-            p-5
-            "
-          >
-
-            <p
-              className="
-              text-slate-500
-              text-xs
-              tracking-[0.25em]
-              uppercase
-              "
-            >
-              AUDIO
-            </p>
-
-            {audioUrl && (
-
-              <button
-                onClick={
-                  replayAudio
-                }
-                className="
-                w-full
-                mt-4
-                py-3
-                rounded-2xl
-                bg-slate-800
-                hover:bg-slate-700
-                transition
-                "
-              >
-                ▶ Replay Translation
-              </button>
-
-            )}
+            <div>
+              <p className="font-semibold">Tamil</p>
+              <p className="mt-2">வணக்கம்</p>
+            </div>
 
           </div>
 
         </div>
-
       </section>
+
+      {/* PRODUCT PREVIEW */}
+      <section className="py-32 px-8">
+        <div className="max-w-4xl mx-auto border border-zinc-200 rounded-[40px] p-10">
+
+          <div className="flex justify-center items-center gap-6 text-lg">
+            <span>English</span>
+            <span>⇄</span>
+            <span>Hindi</span>
+          </div>
+
+          <div className="w-28 h-28 rounded-full bg-black mx-auto mt-10" />
+
+          <p className="text-center text-zinc-500 mt-4">
+            Hold to Speak
+          </p>
+
+          <div className="mt-12">
+            <p className="font-semibold">You</p>
+            <p className="mt-2">Hello</p>
+
+            <div className="mt-8">
+              <p className="font-semibold">Hindi</p>
+              <p className="mt-2">नमस्ते</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* LANGUAGES */}
+      <section className="py-32 border-t border-zinc-100">
+        <div className="max-w-6xl mx-auto px-8 text-center">
+
+          <h2 className="text-5xl md:text-6xl font-bold">
+            Built For
+            <br />
+            Indian Languages
+          </h2>
+
+          <div className="mt-16 flex flex-wrap justify-center gap-4">
+            {[
+              "English",
+              "Hindi",
+              "Kannada",
+              "Tamil",
+              "Telugu",
+              "Malayalam"
+            ].map((lang) => (
+              <div
+                key={lang}
+                className="px-6 py-3 rounded-full border border-zinc-200"
+              >
+                {lang}
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* WHY SECTION */}
+      <section className="py-32 px-8 border-t border-zinc-100">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12">
+
+          <div>
+            <h3 className="text-3xl font-bold">Instant</h3>
+            <p className="mt-4 text-zinc-500">
+              No typing. No waiting.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-3xl font-bold">Natural</h3>
+            <p className="mt-4 text-zinc-500">
+              Speak exactly as you normally do.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-3xl font-bold">Indian</h3>
+            <p className="mt-4 text-zinc-500">
+              Built around Indian languages first.
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="py-32 px-8 border-t border-zinc-100">
+        <div className="max-w-6xl mx-auto">
+
+          <h2 className="text-5xl font-bold text-center">
+            How It Works
+          </h2>
+
+          <div className="mt-20 grid md:grid-cols-3 gap-12 text-center">
+
+            <div>
+              <p className="text-zinc-400">01</p>
+              <h3 className="mt-3 text-2xl font-semibold">
+                Choose Languages
+              </h3>
+            </div>
+
+            <div>
+              <p className="text-zinc-400">02</p>
+              <h3 className="mt-3 text-2xl font-semibold">
+                Hold To Speak
+              </h3>
+            </div>
+
+            <div>
+              <p className="text-zinc-400">03</p>
+              <h3 className="mt-3 text-2xl font-semibold">
+                Hear Translation
+              </h3>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-40 text-center border-t border-zinc-100">
+        <h2 className="text-6xl font-bold">
+          Ready to Talk?
+        </h2>
+
+        <Link
+          href="/connect"
+          className="inline-block mt-10 px-10 py-5 rounded-full bg-black text-white hover:scale-105 transition"
+        >
+          Open Connect
+        </Link>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-20 border-t border-zinc-100">
+        <div className="max-w-6xl mx-auto px-8 flex justify-between items-center">
+
+          <div className="font-semibold">
+            1Speak
+          </div>
+
+          <div className="text-zinc-500">
+            Built in India.
+          </div>
+
+        </div>
+      </footer>
 
     </main>
   );

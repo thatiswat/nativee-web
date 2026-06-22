@@ -1,33 +1,66 @@
-"use client";
-
-import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="text-center py-12 px-6">
-
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+    <section
+      className="
+      min-h-[80vh]
+      flex
+      items-center
+      justify-center
+      px-8
+      "
+    >
+      <div
         className="
-        text-7xl
-        md:text-8xl
-        font-bold
-        tracking-tight
+        text-center
+        max-w-5xl
         "
       >
-        iSpeak
-      </motion.h1>
+        <h1
+          className="
+          text-7xl
+          md:text-8xl
+          font-bold
+          tracking-tight
+          "
+        >
+          Language
+          <br />
+          Shouldn't
+          <br />
+          Matter.
+        </h1>
 
-      <p className="text-slate-400 text-xl mt-4">
-        Talk Across Languages. Naturally.
-      </p>
+        <p
+          className="
+          mt-8
+          text-xl
+          text-zinc-400
+          "
+        >
+          Real-time voice translation
+          for conversations.
+        </p>
 
-      <p className="text-slate-500 mt-4 max-w-2xl mx-auto">
-        Real-time voice translation built for conversations
-        across India.
-      </p>
-
+        <Link
+          href="/connect"
+          className="
+          inline-flex
+          mt-10
+          px-8
+          py-4
+          rounded-full
+          bg-white
+          text-black
+          font-medium
+          hover:opacity-90
+          transition
+          "
+        >
+          Open Connect
+        </Link>
+      </div>
     </section>
   );
 }
