@@ -1,19 +1,19 @@
 export default function Footer() {
   return (
-    <footer
-      className="
-      py-16
-      text-center
-      text-zinc-500
-      "
-    >
-      <p>
-        1Speak Beta v0.1
-      </p>
+    <footer className="py-20 border-t border-zinc-100">
 
-      <p className="mt-2">
-        Built for conversations.
-      </p>
+      <div className="max-w-6xl mx-auto px-8 flex justify-between items-center">
+
+        <div className="font-semibold">
+          Nativee
+        </div>
+
+        <div className="text-zinc-500">
+          Built in India.
+        </div>
+
+      </div>
+
     </footer>
   );
 }

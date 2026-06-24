@@ -1,43 +1,56 @@
-import Link from "next/link";
+import Logo from "./Logo";
 
 export default function Navbar() {
   return (
-    <nav
-      className="
-      max-w-7xl
-      mx-auto
-      px-8
-      py-8
-      flex
-      items-center
-      justify-between
-      "
-    >
-      <Link
-        href="/"
-        className="
-        text-2xl
-        font-semibold
-        tracking-tight
-        "
-      >
-        1Speak
-      </Link>
+    <header className="fixed top-0 z-50 w-full bg-white border-b border-zinc-100">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
 
-      <Link
-        href="/connect"
-        className="
-        px-5
-        py-2.5
-        rounded-full
-        border
-        border-zinc-800
-        hover:bg-zinc-900
-        transition
-        "
-      >
-        Open Connect
-      </Link>
-    </nav>
+        {/* Logo */}
+        <Logo className="text-3xl" />
+
+        {/* Navigation */}
+        <nav className="hidden md:flex items-center gap-10 text-sm text-zinc-500">
+          <a
+            href="#modes"
+            className="transition-colors hover:text-black"
+          >
+            Modes
+          </a>
+
+          <a
+            href="#how"
+            className="transition-colors hover:text-black"
+          >
+            How
+          </a>
+
+          <a
+            href="#why"
+            className="transition-colors hover:text-black"
+          >
+            Why
+          </a>
+        </nav>
+
+        {/* CTA */}
+        <button
+          className="
+            rounded-2xl
+            bg-[#1747FF]
+            px-6
+            py-3
+            font-semibold
+            text-white
+            transition-all
+            duration-300
+            hover:scale-105
+            hover:shadow-lg
+          "
+        >
+          Try Nativee
+        </button>
+
+      </div>
+    </header>
   );
 }
