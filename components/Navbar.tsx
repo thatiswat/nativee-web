@@ -1,15 +1,18 @@
+import Link from "next/link";
 import Logo from "./Logo";
 
 export default function Navbar() {
   return (
-    <header className="fixed top-0 z-50 w-full bg-white border-b border-zinc-100">
+    <header className="fixed top-0 z-50 w-full border-b border-zinc-100 bg-white">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
 
         {/* Logo */}
-        <Logo className="text-3xl" />
+        <Link href="/">
+          <Logo className="text-3xl" />
+        </Link>
 
         {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-10 text-sm text-zinc-500">
+        <nav className="hidden items-center gap-10 text-sm text-zinc-500 md:flex">
           <a
             href="#modes"
             className="transition-colors hover:text-black"
@@ -33,12 +36,13 @@ export default function Navbar() {
         </nav>
 
         {/* CTA */}
-        <button
+        <Link
+          href="/home"
           className="
-            rounded-2xl
+            rounded-3xl
             bg-[#1747FF]
-            px-6
-            py-3
+            px-8
+            py-4
             font-semibold
             text-white
             transition-all
@@ -48,7 +52,7 @@ export default function Navbar() {
           "
         >
           Try Nativee
-        </button>
+        </Link>
 
       </div>
     </header>
