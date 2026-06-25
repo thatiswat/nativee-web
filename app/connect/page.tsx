@@ -1,131 +1,139 @@
 "use client";
 
 import { useState } from "react";
-import LanguagePicker from "@/components/LanguagePicker";
-import MicButton from "@/components/MicButton";
+
+import ConnectHeader from "@/app/connect/components/ConnectHeader";
+import LanguagePill from "@/app/connect/components/LanguagePill";
+import VoiceStage from "@/app/connect/components/VoiceStage";
+import ResultCard from "@/app/connect/components/ResultCard";
+import ActionBar from "@/app/connect/components/ActionBar";
+
 import { sendAudio } from "@/lib/api";
 
 const BACKEND_URL =
   "https://ispeak-backend-production-d877.up.railway.app";
 
-export default function Connect() {
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+const languageMap: Record<string, string> = {
+  English: "en",
+  Hindi: "hi",
+  Tamil: "ta",
+  Kannada: "kn",
+  Telugu: "te",
+};
 
-  const [sourceLanguage, setSourceLanguage] = useState("");
-  const [targetLanguage, setTargetLanguage] = useState("hi");
+type VoiceState =
+  | "idle"
+  | "listening"
+  | "processing";
+
+export default function Connect() {
+  const [voiceState, setVoiceState] =
+    useState<VoiceState>("idle");
+
+  const [sourceLanguage, setSourceLanguage] =
+    useState("English");
+
+  const [targetLanguage, setTargetLanguage] =
+    useState("Hindi");
+
+  const [original, setOriginal] =
+    useState("");
+
+  const [translated, setTranslated] =
+    useState("");
+
+  const [audioUrl, setAudioUrl] =
+    useState<string | null>(null);
+
+  async function handleRecording(blob: Blob) {
+    setVoiceState("processing");
+
+    try {
+      const data = await sendAudio(
+        blob,
+        languageMap[sourceLanguage],
+        languageMap[targetLanguage]
+      );
+
+      setOriginal(data.original || "");
+      setTranslated(data.translated || "");
+
+      const url =
+        data.audio_url.startsWith("http")
+          ? data.audio_url
+          : `${BACKEND_URL}${
+              data.audio_url.startsWith("/")
+                ? ""
+                : "/"
+            }${data.audio_url}`;
+
+      setAudioUrl(url);
+
+      const audio = new Audio(url);
+
+      audio.volume = 1;
+
+      audio.play().catch(() => {});
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setVoiceState("idle");
+    }
+  }
 
   function replayAudio() {
     if (!audioUrl) return;
+
     const audio = new Audio(audioUrl);
+
     audio.currentTime = 0;
+
     audio.play().catch(() => {});
   }
 
+  function clear() {
+    setOriginal("");
+    setTranslated("");
+    setAudioUrl(null);
+  }
+
   return (
-    <main className="min-h-screen bg-white text-black flex items-center justify-center px-6">
+    <main className="min-h-screen bg-[#F8F9FC]">
+      <div className="mx-auto max-w-2xl px-6 py-12">
 
-      {/* PHONE FRAME */}
-      <div className="w-full max-w-md">
+        <ConnectHeader />
 
-        {/* HEADER */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-semibold tracking-tight">
-            Connect
-          </h1>
-          <p className="text-sm text-zinc-500 mt-2">
-            Speak naturally. Hear instantly.
-          </p>
-        </div>
+        <LanguagePill
+          sourceLanguage={sourceLanguage}
+          targetLanguage={targetLanguage}
+          onSourceChange={setSourceLanguage}
+          onTargetChange={setTargetLanguage}
+          onSwap={() => {
+            const temp = sourceLanguage;
 
-        {/* CARD */}
-        <div className="relative bg-white border border-zinc-200 rounded-[40px] shadow-sm px-6 py-10 overflow-hidden">
+            setSourceLanguage(targetLanguage);
+            setTargetLanguage(temp);
+          }}
+        />
 
-          {/* SAFE BACKGROUND GLOW (NO BLOCKING) */}
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-60 h-60 bg-black/5 blur-3xl rounded-full pointer-events-none" />
+        <VoiceStage
+          state={voiceState}
+          setState={setVoiceState}
+          onRecordingComplete={handleRecording}
+        />
 
-          {/* LANGUAGE PICKER */}
-          <div className="flex items-center justify-center gap-3 relative z-10">
-            <LanguagePicker
-              sourceLanguage={sourceLanguage}
-              targetLanguage={targetLanguage}
-              onSourceChange={setSourceLanguage}
-              onTargetChange={setTargetLanguage}
-            />
+        <ResultCard
+          original={original}
+          translated={translated}
+        />
 
-            <button
-              onClick={() => {
-                if (!sourceLanguage || sourceLanguage === "auto") return;
+        <ActionBar
+          replayAudio={replayAudio}
+          clear={clear}
+          audioUrl={audioUrl}
+        />
 
-                const temp = sourceLanguage;
-                setSourceLanguage(targetLanguage);
-                setTargetLanguage(temp);
-              }}
-              className="h-10 w-10 rounded-full border border-zinc-300 hover:bg-zinc-100 transition flex items-center justify-center"
-            >
-              ⇄
-            </button>
-          </div>
-
-          {/* MIC */}
-          <div className="mt-20 flex flex-col items-center relative z-10">
-
-            <MicButton
-              disabled={isProcessing}
-              onRecordingComplete={async (blob) => {
-                if (isProcessing) return;
-
-                if (!sourceLanguage) return;
-
-                setIsProcessing(true);
-
-                try {
-                  const data = await sendAudio(
-                    blob,
-                    sourceLanguage,
-                    targetLanguage
-                  );
-
-                  const url =
-                    data.audio_url.startsWith("http")
-                      ? data.audio_url
-                      : `${BACKEND_URL}${
-                          data.audio_url.startsWith("/") ? "" : "/"
-                        }${data.audio_url}`;
-
-                  setAudioUrl(url);
-
-                  const audio = new Audio(url);
-                  audio.volume = 1;
-                  audio.play().catch(() => {});
-
-                } catch (err) {
-                  console.error(err);
-                } finally {
-                  setIsProcessing(false);
-                }
-              }}
-            />
-
-            <p className="mt-8 text-sm text-zinc-500">
-              Hold to speak
-            </p>
-
-            {/* REPLAY */}
-            {audioUrl && (
-              <button
-                onClick={replayAudio}
-                className="mt-6 px-6 py-2 rounded-full border border-zinc-300 hover:bg-zinc-100 transition text-sm"
-              >
-                ▶ Replay
-              </button>
-            )}
-
-          </div>
-
-        </div>
       </div>
-
     </main>
   );
 }

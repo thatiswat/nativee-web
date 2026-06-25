@@ -2,7 +2,7 @@
 
 import { Mic } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 
 type Props = {
   onRecordingComplete: (blob: Blob) => void;
@@ -11,9 +11,10 @@ type Props = {
 
 export default function MicButton({
   onRecordingComplete,
-  disabled = false
+  disabled = false,
 }: Props) {
   const [recording, setRecording] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -23,7 +24,7 @@ export default function MicButton({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true
+        audio: true,
       });
 
       chunksRef.current = [];
@@ -32,27 +33,36 @@ export default function MicButton({
       recorderRef.current = recorder;
 
       recorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
+        if (event.data.size > 0) {
           chunksRef.current.push(event.data);
         }
       };
 
       recorder.start();
+
       setRecording(true);
-    } catch (error) {
-      console.error("Microphone access failed:", error);
+      setProcessing(false);
+    } catch (err) {
+      console.error(err);
     }
   }
 
   function stopRecording() {
     if (!recorderRef.current || !recording) return;
 
+    setRecording(false);
+    setProcessing(true);
+
     recorderRef.current.onstop = () => {
       const blob = new Blob(chunksRef.current, {
-        type: "audio/webm"
+        type: "audio/webm",
       });
 
       onRecordingComplete(blob);
+
+      setTimeout(() => {
+        setProcessing(false);
+      }, 3000);
     };
 
     recorderRef.current.stop();
@@ -60,52 +70,152 @@ export default function MicButton({
     recorderRef.current.stream
       .getTracks()
       .forEach((track) => track.stop());
-
-    setRecording(false);
   }
 
   return (
-    <div className="flex justify-center">
-      <motion.button
-        disabled={disabled}
-        onMouseDown={startRecording}
-        onMouseUp={stopRecording}
-        onMouseLeave={stopRecording}
-        onTouchStart={(e) => {
-          e.preventDefault();
-          startRecording();
-        }}
-        onTouchEnd={(e) => {
-          e.preventDefault();
-          stopRecording();
-        }}
-        animate={{
-          scale: recording ? 1.05 : 1,
-          boxShadow: recording
-            ? "0 0 0px rgba(0,0,0,0.1)"
-            : "0 10px 40px rgba(0,0,0,0.08)"
-        }}
-        transition={{
-          duration: 0.2
-        }}
-        whileTap={{ scale: 0.95 }}
-        className={`
-          h-44 w-44 md:h-52 md:w-52
-          rounded-full
-          flex items-center justify-center
-          transition-all
-          border
-          ${
-            disabled
-              ? "bg-zinc-200 border-zinc-300 opacity-60 cursor-not-allowed"
-              : recording
-              ? "bg-black text-white border-black"
-              : "bg-white text-black border-zinc-300 hover:border-black"
-          }
-        `}
-      >
-        <Mic size={64} strokeWidth={1.5} />
-      </motion.button>
+    <div className="flex flex-col items-center justify-center">
+
+      {/* IDLE */}
+      {!recording && !processing && (
+        <motion.button
+          onMouseDown={startRecording}
+          onMouseUp={stopRecording}
+          onMouseLeave={stopRecording}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            startRecording();
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            stopRecording();
+          }}
+          whileTap={{ scale: 0.95 }}
+          className="
+            flex
+            h-44
+            w-44
+            items-center
+            justify-center
+          "
+        >
+          <Mic
+            size={74}
+            strokeWidth={1.8}
+            className="text-[#1747FF]"
+          />
+        </motion.button>
+      )}
+
+      {/* LISTENING */}
+      {recording && (
+        <>
+          <div className="flex gap-8">
+
+            <motion.div
+              animate={{
+                y: [-10, 10, -10],
+              }}
+              transition={{
+                duration: 0.8,
+                repeat: Infinity,
+              }}
+              className="
+                h-5
+                w-5
+                rounded-full
+                bg-[#1747FF]
+              "
+            />
+
+            <motion.div
+              animate={{
+                y: [10, -10, 10],
+              }}
+              transition={{
+                duration: 0.8,
+                repeat: Infinity,
+              }}
+              className="
+                h-5
+                w-5
+                rounded-full
+                bg-[#1747FF]
+              "
+            />
+
+          </div>
+
+          <motion.p
+            animate={{
+              opacity: [0.4, 1, 0.4],
+            }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+            }}
+            className="
+              mt-8
+              text-4xl
+              font-light
+              text-[#1747FF]
+            "
+          >
+            Listening...
+          </motion.p>
+        </>
+      )}
+
+      {/* PROCESSING */}
+      {processing && (
+        <>
+          <div className="flex items-end gap-3">
+
+            {[50, 90, 120, 90, 50].map((h, i) => (
+              <motion.div
+                key={i}
+                animate={{
+                  height: [h * 0.5, h, h * 0.5],
+                }}
+                transition={{
+                  duration: 0.8,
+                  repeat: Infinity,
+                  delay: i * 0.1,
+                }}
+                className="
+                  w-3
+                  rounded-full
+                  bg-[#1747FF]
+                "
+              />
+            ))}
+
+          </div>
+
+          <motion.div
+            animate={{
+              opacity: [0.4, 1, 0.4],
+            }}
+            transition={{
+              duration: 1.2,
+              repeat: Infinity,
+            }}
+            className="
+              mt-8
+              text-4xl
+              font-light
+            "
+          >
+            <span className="text-[#1747FF]">
+              Voice
+            </span>
+
+            <span className="ml-2 text-[#8AA2FF]">
+              Search
+            </span>
+          </motion.div>
+        </>
+      )}
+
     </div>
   );
 }
