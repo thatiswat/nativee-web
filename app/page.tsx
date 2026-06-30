@@ -1,27 +1,33 @@
-import Navbar from "@/components/Navbar";
-import Hero from "@/app/website/components/Hero";
-import TrustStrip from "@/app/website/components/TrustStrip";
-import Languages from "@/app/website/components/Languages";
-import ProductModes from "@/app/website/components/ProductModes";
-import CTA from "@/app/website/components/CTA";
-import Footer from "@/app/website/components/Footer";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+
+import Hero from "@/components/home/Hero";
+import Platform from "@/components/home/Platform";
+import Developer from "@/components/home/Developer";
+import Enterprise from "@/components/home/Enterprise";
+import CTA from "@/components/home/CTA";
 
 export default function Home() {
   return (
-    <main>
+    <>
       <Navbar />
 
+      {/* Hero */}
       <Hero />
 
-      <TrustStrip />
+      {/* What Nativee is */}
+      <Platform />
 
-      <Languages />
+      {/* Build with Nativee */}
+      <Developer />
 
-      <ProductModes />
+      {/* Scale with Nativee */}
+      <Enterprise />
 
+      {/* Final Call To Action */}
       <CTA />
 
       <Footer />
-    </main>
+    </>
   );
 }
